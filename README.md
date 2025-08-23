@@ -2,6 +2,8 @@
 
 A web-based tool for inspecting and analyzing Google Calendar events with advanced search and export capabilities.
 
+🌐 **Live Demo**: [https://gcal-inspector.pages.dev](https://gcal-inspector.pages.dev)
+
 ## Features
 
 - **Google Calendar Integration**: Connect to your Google Calendar using OAuth2 authentication

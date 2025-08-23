@@ -1,8 +1,84 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Checkbox,
+  Chip,
+  Container,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+  Alert,
+  CircularProgress
+} from '@mui/material'
+import {
+  Google as GoogleIcon,
+  Logout as LogoutIcon,
+  Search as SearchIcon,
+  Clear as ClearIcon,
+  Download as DownloadIcon,
+  OpenInNew as OpenInNewIcon,
+  CalendarToday as CalendarIcon,
+  Event as EventIcon,
+  Person as PersonIcon
+} from '@mui/icons-material'
+import { createTheme, ThemeProvider } from '@mui/material/styles'
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly'
 const CAL_API = 'https://www.googleapis.com/calendar/v3'
+
+// Create a dark theme
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#7cc2ff',
+    },
+    background: {
+      default: '#0b0d10',
+      paper: '#151a1f',
+    },
+    text: {
+      primary: '#e8e8e8',
+      secondary: '#97a3af',
+    },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          border: '1px solid #26303a',
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          border: '1px solid #26303a',
+        },
+      },
+    },
+  },
+})
 
 function useGoogleAccessToken() {
   const tokenClientRef = useRef(null)
@@ -72,10 +148,10 @@ export default function App() {
 
   const [showOnlyNext, setShowOnlyNext] = useState(true)
 
-  // NEW: search inputs
+  // Search inputs
   const [titleQuery, setTitleQuery] = useState('')
   const [emailQuery, setEmailQuery] = useState('')
-  // NEW: applied (debounce via button)
+  // Applied (debounce via button)
   const [appliedTitle, setAppliedTitle] = useState('')
   const [appliedEmail, setAppliedEmail] = useState('')
 
@@ -179,7 +255,7 @@ export default function App() {
     setEventObj(ev)
   }
 
-  // --- CSV EXPORTS ---
+  // CSV EXPORTS
   const onExportEventsCsv = () => {
     const rows = [
       ['id','summary','start','end','status','created','updated','creator.email','organizer.email','attendees','hangoutLink','htmlLink']
@@ -214,122 +290,269 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <div className="panel">
-        <div className="header">
-          <div className="left">
-            <h2>Google Calendar Inspector</h2>
-            {profile?.email && <span className="badge">{profile.email}</span>}
-          </div>
-          <div className="right">
-            {!authed ? (
-              <button className="primary" disabled={!ready} onClick={signIn}>Sign in with Google</button>
-            ) : (
-              <button className="ghost" onClick={signOut}>Sign out</button>
-            )}
-          </div>
-        </div>
+    <ThemeProvider theme={darkTheme}>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="h4" component="h1">
+                  Google Calendar Inspector
+                </Typography>
+                {profile?.email && (
+                  <Chip 
+                    icon={<PersonIcon />} 
+                    label={profile.email} 
+                    variant="outlined" 
+                    size="small"
+                  />
+                )}
+              </Box>
+              <Box>
+                {!authed ? (
+                  <Button
+                    variant="contained"
+                    startIcon={<GoogleIcon />}
+                    disabled={!ready}
+                    onClick={signIn}
+                    size="large"
+                  >
+                    Sign in with Google
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    startIcon={<LogoutIcon />}
+                    onClick={signOut}
+                  >
+                    Sign out
+                  </Button>
+                )}
+              </Box>
+            </Box>
 
-        {!authed && <p>Sign in to load your calendars.</p>}
+            {!authed && (
+              <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+                Sign in to load your calendars.
+              </Typography>
+            )}
+          </CardContent>
+        </Card>
 
         {authed && (
           <>
-            <div className="header" style={{ gap: 12, alignItems: 'flex-end' }}>
-              <div className="left" style={{ gap: 8 }}>
-                <label htmlFor="calSel" style={{ color: '#bbb' }}>Calendar</label>
-                <select id="calSel" value={selectedCalId} onChange={(e) => setSelectedCalId(e.target.value)}>
-                  {calendars.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.summary} {c.primary ? '(primary)' : ''}
-                    </option>
-                  ))}
-                </select>
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Grid container spacing={3} alignItems="flex-end">
+                  <Grid item xs={12} md={6}>
+                    <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+                      <TextField
+                        select
+                        label="Calendar"
+                        value={selectedCalId}
+                        onChange={(e) => setSelectedCalId(e.target.value)}
+                        sx={{ minWidth: 200 }}
+                      >
+                        {calendars.map(c => (
+                          <MenuItem key={c.id} value={c.id}>
+                            {c.summary} {c.primary ? '(primary)' : ''}
+                          </MenuItem>
+                        ))}
+                      </TextField>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#bbb' }}>
-                  <input type="checkbox" checked={showOnlyNext} onChange={e => setShowOnlyNext(e.target.checked)} />
-                  Only upcoming
-                </label>
-              </div>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={showOnlyNext}
+                            onChange={(e) => setShowOnlyNext(e.target.checked)}
+                          />
+                        }
+                        label="Only upcoming"
+                      />
+                    </Stack>
+                  </Grid>
 
-              <div className="right" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <input
-                  placeholder="Search title / description / location"
-                  value={titleQuery}
-                  onChange={(e) => setTitleQuery(e.target.value)}
-                  style={{ minWidth: 260 }}
-                />
-                <input
-                  placeholder="Search by emails (attendees / creator / organizer)"
-                  value={emailQuery}
-                  onChange={(e) => setEmailQuery(e.target.value)}
-                  style={{ minWidth: 260 }}
-                />
-                <button onClick={onApplySearch}>Search</button>
-                <button className="ghost" onClick={onClearSearch}>Clear</button>
-              </div>
-            </div>
+                  <Grid item xs={12} md={6}>
+                    <Stack direction="row" spacing={2} flexWrap="wrap">
+                      <TextField
+                        placeholder="Search title / description / location"
+                        value={titleQuery}
+                        onChange={(e) => setTitleQuery(e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{ minWidth: 260 }}
+                      />
+                      <TextField
+                        placeholder="Search by emails"
+                        value={emailQuery}
+                        onChange={(e) => setEmailQuery(e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{ minWidth: 260 }}
+                      />
+                      <Button variant="contained" onClick={onApplySearch}>
+                        Search
+                      </Button>
+                      <IconButton onClick={onClearSearch} color="inherit">
+                        <ClearIcon />
+                      </IconButton>
+                    </Stack>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
 
-            <div className="header">
-              <div className="left">
-                <input
-                  placeholder="Event ID (optional)"
-                  value={eventIdInput}
-                  onChange={(e) => setEventIdInput(e.target.value)}
-                  style={{ minWidth: 280 }}
-                />
-                <button onClick={onFetchById}>Fetch by ID</button>
-              </div>
-              <div className="right" style={{ gap: 8 }}>
-                <button onClick={onExportEventsCsv}>Export Events CSV</button>
-                <button className="ghost" onClick={onExportEventCsv} disabled={!eventObj}>
-                  Export Selected Event CSV
-                </button>
-              </div>
-            </div>
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Grid container spacing={3} alignItems="center">
+                  <Grid item xs={12} md={6}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <TextField
+                        placeholder="Event ID (optional)"
+                        value={eventIdInput}
+                        onChange={(e) => setEventIdInput(e.target.value)}
+                        sx={{ minWidth: 280 }}
+                      />
+                      <Button variant="contained" onClick={onFetchById}>
+                        Fetch by ID
+                      </Button>
+                    </Stack>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Stack direction="row" spacing={2} justifyContent="flex-end">
+                      <Button
+                        variant="contained"
+                        startIcon={<DownloadIcon />}
+                        onClick={onExportEventsCsv}
+                      >
+                        Export Events CSV
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        startIcon={<DownloadIcon />}
+                        onClick={onExportEventCsv}
+                        disabled={!eventObj}
+                      >
+                        Export Selected Event CSV
+                      </Button>
+                    </Stack>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
 
             {error && (
-              <div className="panel" style={{ background: '#2a1212', borderColor: '#5b2a2a' }}>
+              <Alert severity="error" sx={{ mb: 3 }}>
                 <strong>Error:</strong> {error}
-              </div>
+              </Alert>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 460px) 1fr', gap: 16, alignItems: 'start' }}>
-              <div className="panel">
-                <h3>Events {loading ? '· Loading…' : `· ${filteredEvents.length}`}</h3>
-                {!loading && filteredEvents.length === 0 && <p className="meta">No events match your filters.</p>}
-                <div className="events">
-                  {filteredEvents.map(ev => (
-                    <div className="event-item" key={ev.id} onClick={() => onPickListEvent(ev)}>
-                      <div style={{ fontWeight: 600 }}>{ev.summary || '(no title)'}</div>
-                      <div className="meta">
-                        {formatDateRange(ev.start, ev.end)} • {ev.creator?.email || 'unknown'}
-                      </div>
-                      <div className="meta">{ev.id}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <Grid container spacing={3} alignItems="stretch">
+              <Grid item xs={12} md={12} lg={5}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Box display="flex" alignItems="center" gap={1} mb={2}>
+                      <EventIcon />
+                      <Typography variant="h6">
+                        Events {loading ? '· Loading…' : `· ${filteredEvents.length}`}
+                      </Typography>
+                      {loading && <CircularProgress size={20} />}
+                    </Box>
+                    
+                    {!loading && filteredEvents.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        No events match your filters.
+                      </Typography>
+                    )}
+                    
+                    <List sx={{ maxHeight: 350, overflow: 'auto' }}>
+                      {filteredEvents.map(ev => (
+                        <ListItem
+                          key={ev.id}
+                          button
+                          onClick={() => onPickListEvent(ev)}
+                          sx={{
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            mb: 1,
+                            '&:hover': {
+                              borderColor: 'primary.main',
+                            },
+                          }}
+                        >
+                          <ListItemText
+                            primary={ev.summary || '(no title)'}
+                            secondary={
+                              <Box>
+                                <Typography variant="body2" color="text.secondary">
+                                  {formatDateRange(ev.start, ev.end)}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {ev.creator?.email || 'unknown'}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                                  {ev.id}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-              <div className="panel">
-                <h3>Event details</h3>
-                {!eventObj && <p className="meta">Select an event from the list, or fetch by ID.</p>}
-                {eventObj && (
-                  <>
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8 }}>
-                      <a href={eventObj.htmlLink} target="_blank" rel="noreferrer">
-                        <button>Open in Google Calendar</button>
-                      </a>
-                      <span className="meta">ID: {eventObj.id}</span>
-                    </div>
-                    <KeyValueTable obj={eventObj} />
-                  </>
-                )}
-              </div>
-            </div>
+              <Grid item xs={12} md={12} lg={7}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="h6" mb={2}>
+                      Event details
+                    </Typography>
+                    
+                    {!eventObj ? (
+                      <Typography variant="body2" color="text.secondary">
+                        Select an event from the list, or fetch by ID.
+                      </Typography>
+                    ) : (
+                      <>
+                        <Box display="flex" alignItems="center" gap={2} mb={2} flexWrap="wrap">
+                          <Button
+                            variant="contained"
+                            startIcon={<OpenInNewIcon />}
+                            href={eventObj.htmlLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            size="small"
+                          >
+                            Open in Google Calendar
+                          </Button>
+                          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                            ID: {eventObj.id}
+                          </Typography>
+                        </Box>
+                        <KeyValueTable obj={eventObj} />
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
           </>
         )}
-      </div>
-    </div>
+      </Container>
+    </ThemeProvider>
   )
 }
 
@@ -430,29 +653,55 @@ function formatDateRange(start, end) {
 function KeyValueTable({ obj }) {
   const rows = useMemo(() => flattenObject(obj), [obj])
   return (
-    <div className="table-wrap">
-      <table className="kv">
-        <thead>
-          <tr><th>Field</th><th>Value</th></tr>
-        </thead>
-        <tbody>
+    <TableContainer component={Paper} sx={{ maxHeight: 350 }}>
+      <Table stickyHeader size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 'bold', color: 'primary.main', fontSize: '0.75rem' }}>Field</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', color: 'primary.main', fontSize: '0.75rem' }}>Value</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {rows.map(([k, v]) => (
-            <tr key={k}>
-              <th>{k}</th>
-              <td>{renderValue(v)}</td>
-            </tr>
+            <TableRow key={k}>
+              <TableCell component="th" sx={{ fontWeight: 'bold', width: '25%', fontSize: '0.75rem', wordBreak: 'break-word' }}>
+                {k}
+              </TableCell>
+              <TableCell sx={{ fontSize: '0.75rem', wordBreak: 'break-word', maxWidth: 0 }}>
+                {renderValue(v)}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </TableContainer>
   )
 }
 
 function renderValue(v) {
-  if (v === null) return <span className="meta">null</span>
-  if (v === undefined) return <span className="meta">undefined</span>
-  if (typeof v === 'object') return <pre>{JSON.stringify(v, null, 2)}</pre>
-  return <span>{String(v)}</span>
+  if (v === null) return <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>null</Typography>
+  if (v === undefined) return <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>undefined</Typography>
+  if (typeof v === 'object') return (
+    <Box
+      component="pre"
+      sx={{
+        margin: 0,
+        whiteSpace: 'pre-wrap',
+        overflowWrap: 'anywhere',
+        maxHeight: 150,
+        overflow: 'auto',
+        bgcolor: 'background.default',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 1,
+        p: 1,
+        fontSize: '0.7rem',
+      }}
+    >
+      {JSON.stringify(v, null, 2)}
+    </Box>
+  )
+  return <Typography variant="body2" sx={{ fontSize: '0.75rem', wordBreak: 'break-word' }}>{String(v)}</Typography>
 }
 
 function flattenObject(obj, prefix = '') {

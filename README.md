@@ -22,6 +22,13 @@ A web-based tool for inspecting and analyzing Google Calendar events with advanc
 - Node.js (version 16 or higher)
 - A Google Cloud Project with Calendar API enabled
 
+### Dependencies
+
+This application uses Material-UI (MUI) for the user interface components:
+- `@mui/material` - Core Material-UI components
+- `@mui/icons-material` - Material Design icons
+- `@emotion/react` & `@emotion/styled` - Styling engine for MUI
+
 ### Installation
 
 1. Clone this repository:
@@ -75,8 +82,7 @@ A web-based tool for inspecting and analyzing Google Calendar events with advanc
 
 ### Project Structure
 
-- `src/App.jsx` - Main application component with all functionality
-- `src/index.css` - Application styles
+- `src/App.jsx` - Main application component with all functionality (built with Material-UI)
 - `public/` - Static assets
 - `index.html` - HTML template
 
